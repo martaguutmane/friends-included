@@ -24,7 +24,19 @@ async function attemptSync(kind: "sale" | "expense", row: Sale | Expense) {
 export async function createSale(actor: EmployeeKey, raw: unknown, source: Origin) {
   assertRole(actor, ["salesperson"]);
   const input = saleInputSchema.parse(raw);
-  const { data, error } = await adminDb().rpc("create_sale", { p: { ...input, amount_cents: cents(input.amount), submitted_by: actor, origin: source.origin, original_chat_id: source.chatId ?? "" } });
+  const { data, error } = await adminDb().rpc("create_sale", { p: {
+    reference: input.reference,
+    customer: input.customer,
+    project: input.project,
+    description: input.description,
+    amount_cents: cents(input.amount),
+    proposed_richard: input.proposedRichard,
+    proposed_anastasia: input.proposedAnastasia,
+    proposed_jean_claude: input.proposedJeanClaude,
+    submitted_by: actor,
+    origin: source.origin,
+    original_chat_id: source.chatId ?? "",
+  } });
   if (error) throw new Error(error.code === "23505" ? "That reference already exists" : error.message);
   const row = data as Sale;
   await attemptSync("sale", row);
@@ -34,7 +46,16 @@ export async function createSale(actor: EmployeeKey, raw: unknown, source: Origi
 export async function createExpense(actor: EmployeeKey, raw: unknown, source: Origin) {
   assertRole(actor, ["expense_reporter"]);
   const input = expenseInputSchema.parse(raw);
-  const { data, error } = await adminDb().rpc("create_expense", { p: { ...input, amount_cents: cents(input.amount), submitted_by: actor, origin: source.origin, original_chat_id: source.chatId ?? "" } });
+  const { data, error } = await adminDb().rpc("create_expense", { p: {
+    reference: input.reference,
+    description: input.description,
+    category: input.category,
+    amount_cents: cents(input.amount),
+    proposed_allocation: input.proposedAllocation,
+    submitted_by: actor,
+    origin: source.origin,
+    original_chat_id: source.chatId ?? "",
+  } });
   if (error) throw new Error(error.code === "23505" ? "That reference already exists" : error.message);
   const row = data as Expense;
   await attemptSync("expense", row);
